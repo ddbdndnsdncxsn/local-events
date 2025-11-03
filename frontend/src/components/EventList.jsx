@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const EventList = () => {
-  const [events, setEvents] = useState([]);
-
+const EventList = ({ events, setEvents }) => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/events'); // Adjust the backend URL if needed
+        const response = await axios.get('http://localhost:5000/api/events');
         setEvents(response.data);
       } catch (error) {
         console.error("Error fetching events:", error);

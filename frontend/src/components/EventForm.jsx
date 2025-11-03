@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const EventForm = () => {
+const EventForm = ({ setEvents }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
@@ -9,7 +9,8 @@ const EventForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/events', { title, description, date });
+      const response = await axios.post('http://localhost:5000/api/events', { title, description, date });
+      setEvents((prevEvents) => [...prevEvents, response.data]);
       setTitle('');
       setDescription('');
       setDate('');
