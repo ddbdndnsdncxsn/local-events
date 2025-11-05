@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
 import EventList from './components/EventList';
 import EventForm from './components/EventForm';
 import Login from './components/Login';
 import Register from './components/Register';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Cookies from 'js-cookie';
 
 const App = () => {
   const [events, setEvents] = useState([]);
@@ -14,31 +15,31 @@ const App = () => {
       <Router>
         <div>
           <h1>LocalEvents</h1>
-          <Switch>
-            <Route path="/login" component={Login} />
-            <Route path="/register" component={Register} />
-            <Route path="/">
-              <AuthUserWrap setEvents={setEvents} events={events} />
-            </Route>
-          </Switch>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<RedirectBasedOnCookie />} />
+          </Routes>
         </div>
       </Router>
     </AuthProvider>
   );
 };
 
-const AuthUserWrap = ({ setEvents, events }) => {
-  const { user, logout } = useAuth();
+const RedirectBasedOnCookie = () => {
+  const { user } = useAuth();
+  const userCookie = Cookies.get("user");
 
-  console.log("User:", user); // Debug log
-
-  if (!user) {
-    return (
-      <div>
-        <p>Please <Link to="/login">login</Link> or <Link to="/register">register</Link>.</p>
-      </div>
-    );
+  if (user || userCookie) {
+    return <AuthUserWrap />;
+  } else {
+    return <Navigate to="/login" />;
   }
+};
+
+const AuthUserWrap = () => {
+  const { user, logout } = useAuth();
+  const [events, setEvents] = useState([]);
 
   return (
     <>

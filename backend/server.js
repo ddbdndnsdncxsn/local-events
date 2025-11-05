@@ -6,7 +6,7 @@ const authRouter = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = 'mongodb://localhost:27017/local-events'; 
+const MONGO_URI = 'mongodb://localhost:27017/local-events';
 
 // Middleware
 app.use(cors());
