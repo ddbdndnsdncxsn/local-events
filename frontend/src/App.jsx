@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
-import EventList from './components/EventList';
-import EventForm from './components/EventForm';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import AuthUserWrap from './components/AuthUserWrap';
 import Login from './components/Login';
 import Register from './components/Register';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Cookies from 'js-cookie';
+import Cookies from 'js-cookie'; // Import Cookies
 
 const App = () => {
-  const [events, setEvents] = useState([]);
-
   return (
     <AuthProvider>
       <Router>
@@ -28,28 +25,13 @@ const App = () => {
 
 const RedirectBasedOnCookie = () => {
   const { user } = useAuth();
-  const userCookie = Cookies.get("user");
+  const userCookie = Cookies.get("user"); // Use the imported Cookies
 
   if (user || userCookie) {
     return <AuthUserWrap />;
   } else {
     return <Navigate to="/login" />;
   }
-};
-
-const AuthUserWrap = () => {
-  const { user, logout } = useAuth();
-  const [events, setEvents] = useState([]);
-
-  return (
-    <>
-      <p>
-        Welcome, {user}! <button onClick={logout}>Logout</button>
-      </p>
-      <EventForm setEvents={setEvents} />
-      <EventList events={events} setEvents={setEvents} />
-    </>
-  );
 };
 
 export default App;

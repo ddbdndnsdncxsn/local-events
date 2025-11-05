@@ -13,7 +13,7 @@ const Login = () => {
         e.preventDefault();
         try {
             await login(username, password);
-            navigate('/'); // Redirect to home page after login
+            navigate('/'); // Redirect to home page after successful login
         } catch (err) {
             setError('Invalid credentials');
         }
