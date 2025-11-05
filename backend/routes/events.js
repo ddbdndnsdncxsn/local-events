@@ -1,3 +1,5 @@
+// backend/routes/events.js
+
 const express = require('express');
 const Event = require('../models/Event');
 const jwt = require('jsonwebtoken');
@@ -30,14 +32,14 @@ router.get('/', async (req, res) => {
 
 // Create a new event
 router.post('/', async (req, res) => {
-  const { title, description, date } = req.body;
+  const { title, description, dateTime } = req.body; // Changed from 'date' to 'dateTime'
   const userId = getUserIdFromToken(req);
   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
-    const newEvent = new Event({ title, description, date, userId });
+    const newEvent = new Event({ title, description, dateTime, userId });
     await newEvent.save();
-        res.status(201).json(newEvent);
+    res.status(201).json(newEvent);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

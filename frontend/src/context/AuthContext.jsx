@@ -8,14 +8,14 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(Cookies.get("user") || null);
 
   const register = async (username, password) => {
-    const response = await axios.post('http://localhost:5000/api/auth/register', { username, password });
+    await axios.post('http://localhost:5000/api/auth/register', { username, password });
     Cookies.set("user", username); // Set cookie on successful registration
     setUser(username);
   };
 
   const login = async (username, password) => {
     const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
-    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('token', response.data.token); // Set token in local storage
     Cookies.set("user", username); // Set cookie on successful login
     setUser(username);
   };

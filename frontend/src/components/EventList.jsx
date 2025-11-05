@@ -1,7 +1,6 @@
 import React from 'react';
 
-const EventList = ({ events = [], setEvents }) => { // Default to empty array
-
+const EventList = ({ events = [], setEvents }) => {
   return (
     <div>
       <h2>Events</h2>
@@ -13,9 +12,18 @@ const EventList = ({ events = [], setEvents }) => { // Default to empty array
             <li key={event._id}>
               <h3>{event.title}</h3>
               <p>{event.description}</p>
-              <p>Date: {new Date(event.date).toLocaleDateString()}</p>
-              <button onClick={() => handleEdit(event)}>Edit</button>
-              <button onClick={() => handleDelete(event._id)}>Delete</button>
+              <p>
+                {/* Format date and time to show both */}
+                {new Date(event.dateTime).toLocaleString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true, // Change to false for 24-hour format
+                })}
+              </p>
             </li>
           ))
         )}

@@ -1,8 +1,9 @@
+// frontend/src/components/AuthUserWrap.jsx
+
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { useAuth } from '../context/AuthContext';
-import EventList from './EventList';
 import UserEvents from './UserEvents';
 
 const AuthUserWrap = () => {
@@ -32,8 +33,7 @@ const AuthUserWrap = () => {
             <p>
                 Welcome, {user}! <button onClick={logout}>Logout</button>
             </p>
-                        <UserEvents />
-            <EventList />
+            <UserEvents />
         </>
     );
 };

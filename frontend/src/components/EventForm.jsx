@@ -1,3 +1,5 @@
+// frontend/src/components/EventForm.jsx
+
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -5,38 +7,54 @@ const EventForm = ({ setEvents }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
   const [editingEventId, setEditingEventId] = useState(null);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
 
     if (!token) {
-      alert('Unauthorized'); // Handle unauthorized access
+      alert('Unauthorized');
+      return;
+    }
+
+    // Combine date and time into ISO format
+    const eventDateTime = new Date(`${date}T${time}`);
+    
+    if (isNaN(eventDateTime)) {
+      setError('Invalid date or time');
       return;
     }
 
     if (editingEventId) {
-      // Edit existing event
       try {
-        await axios.put(`http://localhost:5000/api/events/${editingEventId}`, { title, description, date }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setEvents(prevEvents => prevEvents.map(event => 
-          event._id === editingEventId ? { ...event, title, description, date } : event
+        await axios.put(`http://localhost:5000/api/events/${editingEventId}`, 
+          { title, description, dateTime: eventDateTime },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEvents(events.map(event => 
+          event._id === editingEventId 
+            ? { ...event, title, description, dateTime: eventDateTime } 
+            : event
         ));
+        setError('');
       } catch (error) {
-        console.error('Error updating event:', error);
+        setError('Error updating event');
+        console.error(error);
       }
     } else {
-      // Create new event
       try {
-        const response = await axios.post('http://localhost:5000/api/events', { title, description, date }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setEvents(prevEvents => [...prevEvents, response.data]);
+        const response = await axios.post('http://localhost:5000/api/events', 
+          { title, description, dateTime: eventDateTime },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEvents([...events, response.data]);
+        setError('');
       } catch (error) {
-        console.error('Error creating event:', error);
+        setError('Error creating event');
+        console.error(error);
       }
     }
 
@@ -44,12 +62,14 @@ const EventForm = ({ setEvents }) => {
     setTitle('');
     setDescription('');
     setDate('');
+    setTime('');
     setEditingEventId(null);
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <h2>{editingEventId ? 'Edit Event' : 'Create Event'}</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <input
         type="text"
         placeholder="Event Title"
@@ -67,6 +87,12 @@ const EventForm = ({ setEvents }) => {
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
+        required
+      />
+      <input
+        type="time"
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
         required
       />
       <button type="submit">{editingEventId ? 'Update Event' : 'Create Event'}</button>
