@@ -1,37 +1,35 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import AuthUserWrap from './components/AuthUserWrap';
+import { AuthProvider, useAuth } from './context/AuthContext'; // Ensure useAuth is imported
+import EventManager from './components/EventManager'; 
 import Login from './components/Login';
 import Register from './components/Register';
-import Cookies from 'js-cookie'; // Import Cookies
+import CreateEvent from './components/CreateEvent';
+import Navigation from './components/Navigation'; 
 
 const App = () => {
-  return (
-    <AuthProvider>
-      <Router>
-        <div>
-          <h1>LocalEvents</h1>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/" element={<RedirectBasedOnCookie />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
-  );
+    return (
+        <AuthProvider>
+            <Router>
+                <div>
+                    <h1>LocalEvents</h1>
+                    <Navigation />
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/create-event" element={<CreateEvent />} />
+                        <Route path="/" element={<PrivateRoute component={EventManager} />} />
+                    </Routes>
+                </div>
+            </Router>
+        </AuthProvider>
+    );
 };
 
-const RedirectBasedOnCookie = () => {
-  const { user } = useAuth();
-  const userCookie = Cookies.get("user"); // Use the imported Cookies
-
-  if (user || userCookie) {
-    return <AuthUserWrap />;
-  } else {
-    return <Navigate to="/login" />;
-  }
+// PrivateRoute Component for protecting routes
+const PrivateRoute = ({ component: Component }) => {
+    const { user } = useAuth(); // Get user state from AuthContext
+    return user ? <Component /> : <Navigate to="/login" replace />;
 };
 
 export default App;

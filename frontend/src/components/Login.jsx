@@ -1,3 +1,4 @@
+// frontend/src/components/Login.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -7,15 +8,15 @@ const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Hook for navigating
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await login(username, password);
+            await login(username, password); // Call login function from context
             navigate('/'); // Redirect to home page after successful login
         } catch (err) {
-            setError('Invalid credentials');
+            setError('Invalid credentials'); // Show error if login fails
         }
     };
 

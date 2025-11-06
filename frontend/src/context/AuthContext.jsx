@@ -5,32 +5,40 @@ import Cookies from 'js-cookie';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(Cookies.get("user") || null);
+    const [user, setUser] = useState(Cookies.get("user") || null);
 
-  const register = async (username, password) => {
-    await axios.post('http://localhost:5000/api/auth/register', { username, password });
-    Cookies.set("user", username); // Set cookie on successful registration
-    setUser(username);
-  };
+    const register = async (username, password) => {
+        try {
+            await axios.post('http://localhost:5000/api/auth/register', { username, password });
+            Cookies.set("user", username);
+            setUser(username);
+        } catch (error) {
+            console.error('Registration failed:', error);
+        }
+    };
 
-  const login = async (username, password) => {
-    const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
-    localStorage.setItem('token', response.data.token); // Set token in local storage
-    Cookies.set("user", username); // Set cookie on successful login
-    setUser(username);
-  };
+    const login = async (username, password) => {
+        try {
+            const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
+            localStorage.setItem('token', response.data.token);
+            Cookies.set("user", username);
+            setUser(username);
+        } catch (error) {
+            console.error('Login failed:', error);
+        }
+    };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    Cookies.remove("user"); // Remove cookie on logout
-    setUser(null);
-  };
+    const logout = () => {
+        localStorage.removeItem('token');
+        Cookies.remove("user");
+        setUser(null);
+    };
 
-  return (
-    <AuthContext.Provider value={{ user, register, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+        <AuthContext.Provider value={{ user, register, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => useContext(AuthContext);
