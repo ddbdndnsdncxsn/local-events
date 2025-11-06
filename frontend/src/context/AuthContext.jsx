@@ -8,30 +8,22 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(Cookies.get("user") || null);
 
     const register = async (username, password) => {
-        try {
-            await axios.post('http://localhost:5000/api/auth/register', { username, password });
-            Cookies.set("user", username);
-            setUser(username);
-        } catch (error) {
-            console.error('Registration failed:', error);
-        }
+        await axios.post('http://localhost:5000/api/auth/register', { username, password });
+        Cookies.set("user", username);
+        setUser(username);
     };
 
     const login = async (username, password) => {
-        try {
-            const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
-            localStorage.setItem('token', response.data.token);
-            Cookies.set("user", username);
-            setUser(username);
-        } catch (error) {
-            console.error('Login failed:', error);
-        }
+        const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
+        localStorage.setItem('token', response.data.token);
+        Cookies.set("user", username);
+        setUser(username);
     };
 
     const logout = () => {
         localStorage.removeItem('token');
         Cookies.remove("user");
-        setUser(null);
+        setUser(null); // Clear user state
     };
 
     return (

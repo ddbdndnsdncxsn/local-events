@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext'; // Ensure useAuth is imported
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext'; 
 import EventManager from './components/EventManager'; 
 import Login from './components/Login';
 import Register from './components/Register';
@@ -13,16 +13,28 @@ const App = () => {
             <Router>
                 <div>
                     <h1>LocalEvents</h1>
-                    <Navigation />
-                    <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/create-event" element={<CreateEvent />} />
-                        <Route path="/" element={<PrivateRoute component={EventManager} />} />
-                    </Routes>
+                    <MainRoutes />
                 </div>
             </Router>
         </AuthProvider>
+    );
+};
+
+// MainRoutes component to manage routes and conditional navigation
+const MainRoutes = () => {
+    const location = useLocation();
+
+    return (
+        <>
+            {/* Conditionally render the Navigation component */}
+            {location.pathname !== '/login' && location.pathname !== '/register' && <Navigation />}
+            <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/create-event" element={<CreateEvent />} />
+                <Route path="/" element={<PrivateRoute component={EventManager} />} />
+            </Routes>
+        </>
     );
 };
 

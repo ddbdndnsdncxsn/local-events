@@ -1,10 +1,15 @@
-// frontend/src/components/Navigation.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navigation = () => {
+    const navigate = useNavigate(); // Get navigate here
     const { user, logout } = useAuth();
+
+    const handleLogout = () => {
+        logout(); // Call the logout function
+        navigate('/login'); // Redirect to /login
+    };
 
     return (
         <nav>
@@ -13,7 +18,7 @@ const Navigation = () => {
             {user ? (
                 <>
                     &nbsp;|&nbsp;
-                    <button onClick={logout}>Logout</button>
+                    <button onClick={handleLogout}>Logout</button>
                 </>
             ) : (
                 <>

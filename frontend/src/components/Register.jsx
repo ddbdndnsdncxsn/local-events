@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
   const { register } = useAuth();
@@ -41,6 +41,11 @@ const Register = () => {
         required
       />
       <button type="submit">Register</button>
+                  <p>
+                <Link to="/login" style={{ marginLeft: '5px' }}>
+                Login Page
+                </Link>
+            </p>
     </form>
   );
 };
