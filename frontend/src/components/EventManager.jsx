@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import ConfirmDialog from './ConfirmDialog';
 
 const EventManager = () => {
   const [events, setEvents] = useState([]);
   const [error, setError] = useState('');
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,19 +31,30 @@ const EventManager = () => {
     fetchEvents();
   }, [navigate]);
 
-  const handleDelete = async (id) => {
+  const requestDelete = (id) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
     const token = localStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:5000/api/events/${id}`, {
+      await axios.delete(`http://localhost:5000/api/events/${pendingDeleteId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setEvents(events.filter(event => event._id !== id));
+      setEvents((prev) => prev.filter((event) => event._id !== pendingDeleteId));
       window.dispatchEvent(new Event('events-updated')); // Unschedule any pending reminder
-    } catch (error) {
-      console.error('Error deleting event:', error);
+    } catch (err) {
+      console.error('Error deleting event:', err);
       setError('Failed to delete event. Please try again.');
+    } finally {
+      setPendingDeleteId(null);
     }
   };
+
+  const cancelDelete = () => setPendingDeleteId(null);
+
+  const pendingTitle = events.find((e) => e._id === pendingDeleteId)?.title;
 
   return (
     <div>
@@ -56,7 +69,7 @@ const EventManager = () => {
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p>{new Date(event.dateTime).toLocaleString()}</p>
-              <button onClick={() => handleDelete(event._id)}>Delete</button>
+              <button onClick={() => requestDelete(event._id)}>Delete</button>
               <button onClick={() => navigate('/create-event', { state: { eventToEdit: event } })}>
                 Edit
               </button>
@@ -64,6 +77,16 @@ const EventManager = () => {
           ))
         )}
       </ul>
+
+      <ConfirmDialog
+        open={!!pendingDeleteId}
+        title="Delete this event?"
+        message={`Are you sure you want to delete "${pendingTitle || 'this event'}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </div>
   );
 };
