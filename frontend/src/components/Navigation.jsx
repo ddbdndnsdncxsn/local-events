@@ -15,19 +15,8 @@ const Navigation = () => {
         <nav>
             <Link to="/">Home</Link>&nbsp;|&nbsp;
             <Link to="/create-event">Create Event</Link>
-            {user ? (
-                <>
-                    &nbsp;|&nbsp;
-                    <button onClick={handleLogout}>Logout</button>
-                </>
-            ) : (
-                <>
-                    &nbsp;|&nbsp;
-                    <Link to="/login">Login</Link>
-                    &nbsp;|&nbsp;
-                    <Link to="/register">Register</Link>
-                </>
-            )}
+            &nbsp;|&nbsp;
+            <button onClick={handleLogout}>Logout</button>
         </nav>
     );
 };

@@ -6,6 +6,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import CreateEvent from './components/CreateEvent';
 import Navigation from './components/Navigation'; 
+import NotFound from './components/NotFound'; // Add this line
+
 
 const App = () => {
     return (
@@ -26,17 +28,18 @@ const MainRoutes = () => {
 
     return (
         <>
-            {/* Conditionally render the Navigation component */}
             {location.pathname !== '/login' && location.pathname !== '/register' && <Navigation />}
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/create-event" element={<CreateEvent />} />
+                <Route path="/create-event" element={<PrivateRoute component={CreateEvent} />} />
                 <Route path="/" element={<PrivateRoute component={EventManager} />} />
+                <Route path="*" element={<NotFound />} /> {/* Catch-all for 404 */}
             </Routes>
         </>
     );
 };
+
 
 // PrivateRoute Component for protecting routes
 const PrivateRoute = ({ component: Component }) => {
