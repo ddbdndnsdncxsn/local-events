@@ -32,14 +32,14 @@ router.get('/', async (req, res) => {
 
 // Create a new event
 router.post('/', async (req, res) => {
-  const { title, description, dateTime } = req.body; // Changed from 'date' to 'dateTime'
+  const { title, description, dateTime, reminder } = req.body; // Include reminder
   const userId = getUserIdFromToken(req);
   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
-    const newEvent = new Event({ title, description, dateTime, userId });
+    const newEvent = new Event({ title, description, dateTime, reminder, userId });
     await newEvent.save();
-    res.status(201).json(newEvent);
+    res.status(201).json(newEvent); // Send back the created event
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -56,11 +56,11 @@ router.put('/:id', async (req, res) => {
       req.body,
       { new: true } // Return the updated document
     );
-    
+
     if (!event) {
       return res.status(404).json({ message: 'Event not found or not authorized' });
     }
-    
+
     res.json(event);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -74,12 +74,25 @@ router.delete('/:id', async (req, res) => {
 
   try {
     const event = await Event.findOneAndDelete({ _id: req.params.id, userId });
-    
+
     if (!event) {
       return res.status(404).json({ message: 'Event not found or not authorized' });
     }
-    
+
     res.status(204).send(); // No content to send for successful deletion
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Optional: Endpoint to fetch upcoming reminders
+router.get('/reminders', async (req, res) => {
+  const userId = getUserIdFromToken(req);
+  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+  try {
+    const reminders = await Event.find({ userId, dateTime: { $gte: new Date() } });
+    res.json(reminders); // Return upcoming reminders
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

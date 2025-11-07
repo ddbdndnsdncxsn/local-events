@@ -1,5 +1,5 @@
-// frontend/src/components/UserEvents.jsx
 import React from 'react';
+import axios from 'axios';
 import EventList from './EventList';
 
 const UserEvents = ({ events, setEvents }) => {

@@ -1,13 +1,13 @@
 // frontend/src/components/EventForm.jsx
-
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const EventForm = ({ setEvents }) => {
+const EventForm = ({ setEvents, events }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [reminder, setReminder] = useState('1 hour before'); // Reminder state
   const [editingEventId, setEditingEventId] = useState(null);
   const [error, setError] = useState('');
 
@@ -31,12 +31,12 @@ const EventForm = ({ setEvents }) => {
     if (editingEventId) {
       try {
         await axios.put(`http://localhost:5000/api/events/${editingEventId}`, 
-          { title, description, dateTime: eventDateTime },
+          { title, description, dateTime: eventDateTime, reminder },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setEvents(events.map(event => 
           event._id === editingEventId 
-            ? { ...event, title, description, dateTime: eventDateTime } 
+            ? { ...event, title, description, dateTime: eventDateTime, reminder } 
             : event
         ));
         setError('');
@@ -47,7 +47,7 @@ const EventForm = ({ setEvents }) => {
     } else {
       try {
         const response = await axios.post('http://localhost:5000/api/events', 
-          { title, description, dateTime: eventDateTime },
+          { title, description, dateTime: eventDateTime, reminder },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setEvents([...events, response.data]);
@@ -63,6 +63,7 @@ const EventForm = ({ setEvents }) => {
     setDescription('');
     setDate('');
     setTime('');
+    setReminder('1 hour before'); // Reset reminder
     setEditingEventId(null);
   };
 
@@ -95,6 +96,20 @@ const EventForm = ({ setEvents }) => {
         onChange={(e) => setTime(e.target.value)}
         required
       />
+      
+      <div>
+        <label>Reminder:</label>
+        <select 
+          value={reminder} 
+          onChange={(e) => setReminder(e.target.value)} 
+          required
+        >
+          <option value="1 hour before">1 hour before</option>
+          <option value="1 day before">1 day before</option>
+          <option value="1 week before">1 week before</option>
+        </select>
+      </div>
+
       <button type="submit">{editingEventId ? 'Update Event' : 'Create Event'}</button>
     </form>
   );
