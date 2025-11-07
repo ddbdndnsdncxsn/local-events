@@ -14,9 +14,9 @@ const UserEvents = ({ events, setEvents }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEvents(events.filter(event => event._id !== id)); // Remove deleted event from state
+      window.dispatchEvent(new Event('events-updated')); // keep reminders in sync
     } catch (error) {
       console.error('Error deleting event:', error.response || error);
-      // Handle error appropriately
     }
   };
 

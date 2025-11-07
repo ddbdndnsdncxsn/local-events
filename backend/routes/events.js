@@ -1,5 +1,3 @@
-// backend/routes/events.js
-
 const express = require('express');
 const Event = require('../models/Event');
 const jwt = require('jsonwebtoken');
@@ -23,7 +21,7 @@ router.get('/', async (req, res) => {
   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
-    const events = await Event.find({ userId });
+    const events = await Event.find({ userId }).sort({ dateTime: 1 });
     res.json(events);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -32,14 +30,20 @@ router.get('/', async (req, res) => {
 
 // Create a new event
 router.post('/', async (req, res) => {
-  const { title, description, dateTime, reminder } = req.body; // Include reminder
+  const { title, description, dateTime, reminder } = req.body;
   const userId = getUserIdFromToken(req);
   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
-    const newEvent = new Event({ title, description, dateTime, reminder, userId });
+    const newEvent = new Event({
+      title,
+      description,
+      dateTime,
+      reminder: reminder || '1 hour before',
+      userId
+    });
     await newEvent.save();
-    res.status(201).json(newEvent); // Send back the created event
+    res.status(201).json(newEvent);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -54,7 +58,7 @@ router.put('/:id', async (req, res) => {
     const event = await Event.findOneAndUpdate(
       { _id: req.params.id, userId },
       req.body,
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!event) {
@@ -79,20 +83,7 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Event not found or not authorized' });
     }
 
-    res.status(204).send(); // No content to send for successful deletion
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Optional: Endpoint to fetch upcoming reminders
-router.get('/reminders', async (req, res) => {
-  const userId = getUserIdFromToken(req);
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-  try {
-    const reminders = await Event.find({ userId, dateTime: { $gte: new Date() } });
-    res.json(reminders); // Return upcoming reminders
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -83,7 +83,7 @@ const ReminderCenter = () => {
     // Poll periodically to pick up changes
     const pollId = setInterval(fetchAndSchedule, 60000);
 
-    // Listen for active changes (create/edit)
+    // Listen for active changes (create/edit/delete)
     const handler = () => fetchAndSchedule();
     window.addEventListener('events-updated', handler);
 

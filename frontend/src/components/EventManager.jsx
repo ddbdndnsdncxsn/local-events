@@ -1,4 +1,3 @@
-// frontend/src/components/EventManager.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -36,7 +35,8 @@ const EventManager = () => {
       await axios.delete(`http://localhost:5000/api/events/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setEvents(events.filter(event => event._id !== id)); 
+      setEvents(events.filter(event => event._id !== id));
+      window.dispatchEvent(new Event('events-updated')); // Unschedule any pending reminder
     } catch (error) {
       console.error('Error deleting event:', error);
       setError('Failed to delete event. Please try again.');
