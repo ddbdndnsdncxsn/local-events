@@ -1,12 +1,15 @@
 // frontend/src/components/EventForm.jsx
+// If you still use this component anywhere, ensure it includes location and sends `dateTime` as ISO.
+// It will also use the global ToastContainer from App.jsx instead of its own container.
+
 import React, { useState } from 'react';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 const EventForm = ({ setEvents, events, editingEventId, setEditingEventId }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [reminder, setReminder] = useState('1 hour before');
@@ -34,11 +37,16 @@ const EventForm = ({ setEvents, events, editingEventId, setEditingEventId }) => 
       handleError('Invalid date or time');
       return;
     }
+    if (!location.trim()) {
+      handleError('Location is required');
+      return;
+    }
 
     const payload = {
       title,
       description,
-      dateTime: eventDateTime.toISOString(), // IMPORTANT: send as `dateTime`
+      location,
+      dateTime: eventDateTime.toISOString(),
       reminder,
     };
 
@@ -74,6 +82,7 @@ const EventForm = ({ setEvents, events, editingEventId, setEditingEventId }) => 
 
     setTitle('');
     setDescription('');
+    setLocation('');
     setDate('');
     setTime('');
     setReminder('1 hour before');
@@ -98,6 +107,13 @@ const EventForm = ({ setEvents, events, editingEventId, setEditingEventId }) => 
         required
       />
       <input
+        type="text"
+        placeholder="Location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        required
+      />
+      <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
@@ -118,7 +134,6 @@ const EventForm = ({ setEvents, events, editingEventId, setEditingEventId }) => 
         </select>
       </div>
       <button type="submit">{editingEventId ? 'Update Event' : 'Create Event'}</button>
-      <ToastContainer />
     </form>
   );
 };

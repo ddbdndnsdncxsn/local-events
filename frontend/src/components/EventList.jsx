@@ -1,4 +1,5 @@
 // frontend/src/components/EventList.jsx
+// Optional: show location in the list so you can verify it's saved/displayed.
 import React from 'react';
 
 const EventList = ({ events, handleEdit, handleDelete }) => {
@@ -6,7 +7,7 @@ const EventList = ({ events, handleEdit, handleDelete }) => {
     <div>
       <h2>User Events</h2>
       <ul>
-        {events.map(event => (
+        {events.map((event) => (
           <li key={event._id}>
             <h3>{event.title}</h3>
             <p>{event.description}</p>
@@ -18,9 +19,10 @@ const EventList = ({ events, handleEdit, handleDelete }) => {
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: true
+                hour12: true,
               })}
             </p>
+            {event.location && <p><strong>Location:</strong> {event.location}</p>}
             <button onClick={() => handleEdit(event)}>Edit</button>
             <button onClick={() => handleDelete(event._id)}>Delete</button>
           </li>

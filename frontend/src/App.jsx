@@ -1,4 +1,4 @@
-// src/App.jsx
+// frontend/src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -9,19 +9,19 @@ import CreateEvent from './components/CreateEvent';
 import Navigation from './components/Navigation';
 import NotFound from './components/NotFound';
 import ReminderCenter from './components/ReminderCenter';
-import { NotificationProvider } from './context/NotificationContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <Router>
-          <div>
-            <h1>LocalEvents</h1>
-            <MainRoutes />
-          </div>
-        </Router>
-      </NotificationProvider>
+      <Router>
+        <div>
+          <h1>LocalEvents</h1>
+          <MainRoutes />
+          <ToastContainer position="top-right" autoClose={3000} />
+        </div>
+      </Router>
     </AuthProvider>
   );
 };
@@ -48,7 +48,7 @@ const MainRoutes = () => {
 
 // PrivateRoute Component for protecting routes
 const PrivateRoute = ({ component: Component }) => {
-  const { user } = useAuth(); // Get user state from AuthContext
+  const { user } = useAuth();
   return user ? <Component /> : <Navigate to="/login" replace />;
 };
 

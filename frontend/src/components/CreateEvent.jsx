@@ -1,7 +1,7 @@
 // frontend/src/components/CreateEvent.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { useNotify } from '../context/NotificationContext';
+import { toast } from 'react-toastify';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const toLocalInputValue = (dateLike) => {
@@ -14,7 +14,6 @@ const toLocalInputValue = (dateLike) => {
 };
 
 const CreateEvent = () => {
-  const { success, error } = useNotify();
   const navigate = useNavigate();
   const location = useLocation();
   const eventToEdit = location.state?.eventToEdit || null;
@@ -24,6 +23,7 @@ const CreateEvent = () => {
     title: '',
     location: '',
     description: '',
+    reminder: '1 hour before',
     dateTimeLocal: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -34,6 +34,7 @@ const CreateEvent = () => {
         title: eventToEdit.title || '',
         location: eventToEdit.location || '',
         description: eventToEdit.description || '',
+        reminder: eventToEdit.reminder || '1 hour before',
         dateTimeLocal: toLocalInputValue(eventToEdit.dateTime),
       });
     }
@@ -49,8 +50,13 @@ const CreateEvent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!form.dateTimeLocal) {
-      error('Please choose a date & time');
+      toast.error('Please choose a date & time');
+      return;
+    }
+    if (!form.location.trim()) {
+      toast.error('Location is required');
       return;
     }
 
@@ -62,26 +68,22 @@ const CreateEvent = () => {
       title: form.title.trim(),
       description: form.description.trim(),
       location: form.location.trim(),
-      // BACKEND REQUIRES `dateTime`
-      dateTime: new Date(form.dateTimeLocal).toISOString(),
+      reminder: form.reminder,
+      dateTime: new Date(form.dateTimeLocal).toISOString(), // backend requires `dateTime`
     };
 
     try {
       if (isEdit) {
-        await axios.put(
-          `http://localhost:5000/api/events/${eventToEdit._id}`,
-          payload,
-          { headers }
-        );
-        success('Event updated ✅');
+        await axios.put(`http://localhost:5000/api/events/${eventToEdit._id}`, payload, { headers });
+        toast.success('Event successfully updated.');
       } else {
         await axios.post('http://localhost:5000/api/events', payload, { headers });
-        success('Event created successfully 🎉');
+        toast.success('Event successfully created.');
       }
       window.dispatchEvent(new Event('events-updated'));
       navigate('/');
     } catch (err) {
-      error(getApiError(err, isEdit ? 'Failed to update event' : 'Failed to create event'));
+      toast.error(getApiError(err, isEdit ? 'Failed to update event' : 'Failed to create event'));
     } finally {
       setSubmitting(false);
     }
@@ -98,6 +100,7 @@ const CreateEvent = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="datetime-local"
           name="dateTimeLocal"
@@ -106,12 +109,15 @@ const CreateEvent = () => {
           onChange={handleChange}
           required
         />
+
         <input
           name="location"
           placeholder="Location"
           value={form.location}
           onChange={handleChange}
+          required
         />
+
         <textarea
           name="description"
           placeholder="Description"
@@ -119,6 +125,16 @@ const CreateEvent = () => {
           value={form.description}
           onChange={handleChange}
         />
+
+        <div>
+          <label style={{ marginRight: 8 }}>Reminder:</label>
+          <select name="reminder" value={form.reminder} onChange={handleChange}>
+            <option value="1 hour before">1 hour before</option>
+            <option value="1 day before">1 day before</option>
+            <option value="1 week before">1 week before</option>
+          </select>
+        </div>
+
         <button type="submit" disabled={submitting}>
           {submitting ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save Changes' : 'Create Event')}
         </button>

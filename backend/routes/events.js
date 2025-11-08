@@ -1,3 +1,4 @@
+// backend/routes/events.js
 const express = require('express');
 const Event = require('../models/Event');
 const jwt = require('jsonwebtoken');
@@ -10,7 +11,7 @@ const getUserIdFromToken = (req) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
     return decoded.id;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -30,20 +31,34 @@ router.get('/', async (req, res) => {
 
 // Create a new event
 router.post('/', async (req, res) => {
-  const { title, description, dateTime, reminder } = req.body;
   const userId = getUserIdFromToken(req);
   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+  const { title, description, dateTime, reminder, location } = req.body;
+
+  // Validate required fields for schema
+  if (!title || !description || !location || !dateTime) {
+    return res.status(400).json({
+      message: 'title, description, location, and dateTime are required',
+    });
+  }
+
+  const dt = new Date(dateTime);
+  if (Number.isNaN(dt.getTime())) {
+    return res.status(400).json({ message: 'Invalid dateTime' });
+  }
 
   try {
     const newEvent = new Event({
       title,
       description,
-      dateTime,
+      location,
+      dateTime: dt,
       reminder: reminder || '1 hour before',
-      userId
+      userId,
     });
-    await newEvent.save();
-    res.status(201).json(newEvent);
+    const saved = await newEvent.save();
+    res.status(201).json(saved);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -54,10 +69,20 @@ router.put('/:id', async (req, res) => {
   const userId = getUserIdFromToken(req);
   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
+  // Coerce dateTime if present
+  const update = { ...req.body };
+  if (update.dateTime) {
+    const dt = new Date(update.dateTime);
+    if (Number.isNaN(dt.getTime())) {
+      return res.status(400).json({ message: 'Invalid dateTime' });
+    }
+    update.dateTime = dt;
+  }
+
   try {
     const event = await Event.findOneAndUpdate(
       { _id: req.params.id, userId },
-      req.body,
+      update,
       { new: true }
     );
 
