@@ -1,15 +1,24 @@
 // frontend/src/components/EventForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const EventForm = ({ setEvents, events }) => {
+const EventForm = ({ setEvents, events, editingEventId, setEditingEventId }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [reminder, setReminder] = useState('1 hour before'); // Reminder state
-  const [editingEventId, setEditingEventId] = useState(null);
+  const [reminder, setReminder] = useState('1 hour before');
   const [error, setError] = useState('');
+
+  const handleSuccess = (message) => {
+    toast.success(message, { autoClose: 3000 });
+  };
+
+  const handleError = (message) => {
+    toast.error(message, { autoClose: 3000 });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,50 +29,54 @@ const EventForm = ({ setEvents, events }) => {
       return;
     }
 
-    // Combine date and time into ISO format
     const eventDateTime = new Date(`${date}T${time}`);
-    
     if (isNaN(eventDateTime)) {
-      setError('Invalid date or time');
+      handleError('Invalid date or time');
       return;
     }
 
+    const payload = {
+      title,
+      description,
+      dateTime: eventDateTime.toISOString(), // IMPORTANT: send as `dateTime`
+      reminder,
+    };
+
     if (editingEventId) {
       try {
-        await axios.put(`http://localhost:5000/api/events/${editingEventId}`, 
-          { title, description, dateTime: eventDateTime, reminder },
+        const { data } = await axios.put(
+          `http://localhost:5000/api/events/${editingEventId}`,
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setEvents(events.map(event => 
-          event._id === editingEventId 
-            ? { ...event, title, description, dateTime: eventDateTime, reminder } 
-            : event
-        ));
+        setEvents(events.map((ev) => (ev._id === editingEventId ? data : ev)));
+        handleSuccess('Event successfully updated.');
         setError('');
-      } catch (error) {
-        setError('Error updating event');
-        console.error(error);
+      } catch (err) {
+        handleError('Error updating event');
+        console.error(err);
       }
     } else {
       try {
-        const response = await axios.post('http://localhost:5000/api/events', 
-          { title, description, dateTime: eventDateTime, reminder },
+        const { data } = await axios.post(
+          'http://localhost:5000/api/events',
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setEvents([...events, response.data]);
+        setEvents([...events, data]);
+        handleSuccess('Event successfully created.');
         setError('');
-      } catch (error) {
-        setError('Error creating event');
-        console.error(error);
+      } catch (err) {
+        handleError('Error creating event');
+        console.error(err);
       }
     }
 
-    // Reset form
     setTitle('');
     setDescription('');
     setDate('');
     setTime('');
-    setReminder('1 hour before'); // Reset reminder
+    setReminder('1 hour before');
     setEditingEventId(null);
   };
 
@@ -96,21 +109,16 @@ const EventForm = ({ setEvents, events }) => {
         onChange={(e) => setTime(e.target.value)}
         required
       />
-      
       <div>
         <label>Reminder:</label>
-        <select 
-          value={reminder} 
-          onChange={(e) => setReminder(e.target.value)} 
-          required
-        >
+        <select value={reminder} onChange={(e) => setReminder(e.target.value)} required>
           <option value="1 hour before">1 hour before</option>
           <option value="1 day before">1 day before</option>
           <option value="1 week before">1 week before</option>
         </select>
       </div>
-
       <button type="submit">{editingEventId ? 'Update Event' : 'Create Event'}</button>
+      <ToastContainer />
     </form>
   );
 };

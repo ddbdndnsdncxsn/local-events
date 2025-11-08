@@ -1,147 +1,130 @@
-import React, { useState } from 'react';
+// frontend/src/components/CreateEvent.jsx
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import { useNotify } from '../context/NotificationContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-const pad2 = (n) => String(n).padStart(2, '0');
-const toLocalDateStr = (dt) => `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
-const toLocalTimeStr = (dt) => `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+const toLocalInputValue = (dateLike) => {
+  if (!dateLike) return '';
+  const d = new Date(dateLike);
+  if (Number.isNaN(d.getTime())) return '';
+  const off = d.getTimezoneOffset();
+  const adjusted = new Date(d.getTime() - off * 60000);
+  return adjusted.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+};
 
 const CreateEvent = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const eventToEdit = location.state?.eventToEdit || null;
+  const { success, error } = useNotify();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const eventToEdit = location.state?.eventToEdit || null;
+  const isEdit = useMemo(() => Boolean(eventToEdit?._id), [eventToEdit]);
 
-    const dt = eventToEdit ? new Date(eventToEdit.dateTime) : null;
+  const [form, setForm] = useState({
+    title: '',
+    location: '',
+    description: '',
+    dateTimeLocal: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-    const [title, setTitle] = useState(eventToEdit ? eventToEdit.title : '');
-    const [description, setDescription] = useState(eventToEdit ? eventToEdit.description : '');
-    const [date, setDate] = useState(eventToEdit ? toLocalDateStr(dt) : '');
-    const [time, setTime] = useState(eventToEdit ? toLocalTimeStr(dt) : '');
-    const [reminder, setReminder] = useState(eventToEdit ? eventToEdit.reminder : '1 hour before');
-    const [error, setError] = useState('');
+  useEffect(() => {
+    if (eventToEdit) {
+      setForm({
+        title: eventToEdit.title || '',
+        location: eventToEdit.location || '',
+        description: eventToEdit.description || '',
+        dateTimeLocal: toLocalInputValue(eventToEdit.dateTime),
+      });
+    }
+  }, [eventToEdit]);
 
-    const buildEventDateTime = (dateStr, timeStr) => {
-        const [y, m, d] = dateStr.split('-').map(Number);
-        const [hh, mm] = timeStr.split(':').map(Number);
-        return new Date(y, m - 1, d, hh, mm, 0, 0);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const getApiError = (err, fallback = 'Something went wrong') =>
+    err?.response?.data?.message || err?.message || fallback;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.dateTimeLocal) {
+      error('Please choose a date & time');
+      return;
+    }
+
+    setSubmitting(true);
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const payload = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      location: form.location.trim(),
+      // BACKEND REQUIRES `dateTime`
+      dateTime: new Date(form.dateTimeLocal).toISOString(),
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    try {
+      if (isEdit) {
+        await axios.put(
+          `http://localhost:5000/api/events/${eventToEdit._id}`,
+          payload,
+          { headers }
+        );
+        success('Event updated ✅');
+      } else {
+        await axios.post('http://localhost:5000/api/events', payload, { headers });
+        success('Event created successfully 🎉');
+      }
+      window.dispatchEvent(new Event('events-updated'));
+      navigate('/');
+    } catch (err) {
+      error(getApiError(err, isEdit ? 'Failed to update event' : 'Failed to create event'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-        if (!title || !description || !date || !time) {
-            setError('All fields are required');
-            return;
-        }
-
-        const token = localStorage.getItem('token');
-        const eventDateTime = buildEventDateTime(date, time);
-
-        if (isNaN(eventDateTime.getTime())) {
-            setError('Invalid date or time');
-            return;
-        }
-
-        setError('');
-
-        try {
-            if (eventToEdit) {
-                // Edit existing event
-                await axios.put(
-                    `http://localhost:5000/api/events/${eventToEdit._id}`,
-                    { title, description, dateTime: eventDateTime, reminder },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-
-                // Clear "seen" flag for this event so it can remind again at the new time
-                const seen = JSON.parse(localStorage.getItem('remindersShown') || '{}');
-                delete seen[eventToEdit._id];
-                localStorage.setItem('remindersShown', JSON.stringify(seen));
-
-                // Notify ReminderCenter to refresh its schedule
-                window.dispatchEvent(new Event('events-updated'));
-                navigate('/');
-            } else {
-                // Create new event
-                await axios.post(
-                    'http://localhost:5000/api/events',
-                    { title, description, dateTime: eventDateTime, reminder },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-
-                // Notify ReminderCenter to refresh its schedule
-                window.dispatchEvent(new Event('events-updated'));
-                navigate('/');
-            }
-
-            // Reset form after submission
-            setTitle('');
-            setDescription('');
-            setDate('');
-            setTime('');
-            setReminder('1 hour before');
-        } catch (error) {
-            console.error('Error saving event:', error);
-            setError('Failed to save event. Please try again.');
-        }
-    };
-
-    return (
-        <div>
-            <h2>{eventToEdit ? 'Edit Event' : 'Create Event'}</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Title:</label>
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Description:</label>
-                    <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Date:</label>
-                    <input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Time:</label>
-                    <input
-                        type="time"
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Reminder:</label>
-                    <select
-                        value={reminder}
-                        onChange={(e) => setReminder(e.target.value)}
-                        required
-                    >
-                        <option value="1 hour before">1 hour before</option>
-                        <option value="1 day before">1 day before</option>
-                        <option value="1 week before">1 week before</option>
-                    </select>
-                </div>
-                <button type="submit">{eventToEdit ? 'Update Event' : 'Create Event'}</button>
-            </form>
-        </div>
-    );
+  return (
+    <div>
+      <h2>{isEdit ? 'Edit Event' : 'Create Event'}</h2>
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12, maxWidth: 480 }}>
+        <input
+          name="title"
+          placeholder="Title"
+          value={form.title}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="datetime-local"
+          name="dateTimeLocal"
+          placeholder="Date & Time"
+          value={form.dateTimeLocal}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="location"
+          placeholder="Location"
+          value={form.location}
+          onChange={handleChange}
+        />
+        <textarea
+          name="description"
+          placeholder="Description"
+          rows="4"
+          value={form.description}
+          onChange={handleChange}
+        />
+        <button type="submit" disabled={submitting}>
+          {submitting ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save Changes' : 'Create Event')}
+        </button>
+      </form>
+    </div>
+  );
 };
 
 export default CreateEvent;
