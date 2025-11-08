@@ -1,16 +1,18 @@
-// frontend/src/components/EventManager.jsx
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext'; // Import useAuth to access user context
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from './ConfirmDialog';
 import { toast } from 'react-toastify';
 
 const EventManager = () => {
+  const { user } = useAuth(); // Get the current logged-in user
   const [events, setEvents] = useState([]);
   const [error, setError] = useState('');
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const navigate = useNavigate();
-
+  
+  // Fetch events when component mounts
   useEffect(() => {
     const fetchEvents = async () => {
       const token = localStorage.getItem('token');
@@ -61,7 +63,8 @@ const EventManager = () => {
 
   return (
     <div>
-      <h2>Your Events</h2>
+      {user && <h2>Welcome, {user}!</h2>} {/* Welcome message */}
+      <h3>Your Events</h3>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <ul>
         {events.length === 0 ? (

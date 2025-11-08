@@ -34,7 +34,6 @@ const EventsPage = () => {
 
     return (
         <div>
-            <h1>Welcome</h1>{user}
             {error && <p style={{ color: 'red' }}>{error}</p>}
             <EventList events={events} setEvents={setEvents} />
             <ToastContainer /> {/* Add ToastContainer for notifications */}
