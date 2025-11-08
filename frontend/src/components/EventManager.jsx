@@ -75,7 +75,16 @@ const EventManager = () => {
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p>
-                {new Date(event.dateTime).toLocaleString()}
+                {/* Format date and time */}
+                {new Date(event.dateTime).toLocaleString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                })}
               </p>
               {event.location && <p><strong>Location:</strong> {event.location}</p>}
               <button onClick={() => requestDelete(event._id)}>Delete</button>
